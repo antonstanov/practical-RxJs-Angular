@@ -1,5 +1,7 @@
+import {Repository} from "./repository.interface";
+
 export interface RepositorySearchResponse {
   incomplete_results: boolean;
-  items: {}[];
+  items: Repository[];
   total_count: number;
 }
