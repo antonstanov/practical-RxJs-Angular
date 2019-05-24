@@ -9,6 +9,8 @@
            [ngModel]="''"
            (ngModelChange)="onTextChange($event)"
     />
+
+    <button class="btn btn-primary" (click)="exportRepos()">Export repos</button>
   </label>
 
   <div *ngIf="(repositories$ | async) as repositories">

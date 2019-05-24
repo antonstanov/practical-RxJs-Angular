@@ -1,24 +1,16 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
 
 // Rx
-import { Observable, of, Subject } from 'rxjs';
-
-import {
-  debounceTime,
-  distinctUntilChanged,
-  filter,
-  map,
-  switchMap,
-} from 'rxjs/operators';
-
-import { filterByOwnerType } from '../../shared/operators/filter-by-owner-type';
+import {Observable, of, Subject} from 'rxjs';
+import {debounceTime, distinctUntilChanged, filter, map, shareReplay, switchMap, take,} from 'rxjs/operators';
+import {filterByOwnerType} from '../../shared/operators/filter-by-owner-type';
 
 // interfaces
-import { RepositorySearchResponse } from '../../shared/models/repository-search-response.interface';
-import { Organization } from '../../shared/models/organization.interface';
-import { Repository } from '../../shared/models/repository.interface';
-import { OwnerType } from '../../shared/enums/owner-type.enum';
+import {RepositorySearchResponse} from '../../shared/models/repository-search-response.interface';
+import {Organization} from '../../shared/models/organization.interface';
+import {Repository} from '../../shared/models/repository.interface';
+import {OwnerType} from '../../shared/enums/owner-type.enum';
 
 const GITHUB_URL = 'https://api.github.com/search/repositories';
 
@@ -44,7 +36,8 @@ export class GithubRepositoriesComponent implements OnInit {
       debounceTime(500),
       distinctUntilChanged(),
       switchMap((query: string) => this.fetchRepositories(query)),
-      filterByOwnerType(OwnerType.User)
+      filterByOwnerType(OwnerType.User),
+      shareReplay(1)
     );
 
     this.organizations$ = this.selectedRepository$.pipe(
@@ -61,6 +54,13 @@ export class GithubRepositoriesComponent implements OnInit {
 
   onRepositoryMouseEvent(repository: Repository | undefined) {
     this.selectedRepository$.next(repository);
+  }
+
+  exportRepos() {
+    this.repositories$.pipe(take(1)).subscribe(repos => {
+      console.log(repos);
+      // export function here });
+    });
   }
 
   private fetchRepositories(query: string): Observable<Repository[]> {
