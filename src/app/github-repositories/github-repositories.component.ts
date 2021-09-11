@@ -1,24 +1,33 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, OnInit } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
 
 // Rx
-import {Observable, of, Subject} from 'rxjs';
-import {debounceTime, distinctUntilChanged, filter, map, shareReplay, switchMap, take,} from 'rxjs/operators';
-import {filterByOwnerType} from '../../shared/operators/filter-by-owner-type';
+import { Observable, of, Subject, timer } from "rxjs";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  map,
+  shareReplay,
+  switchMap,
+  take,
+  tap,
+} from "rxjs/operators";
+import { filterByOwnerType } from "../../shared/operators/filter-by-owner-type";
 
 // interfaces
-import {RepositorySearchResponse} from '../../shared/models/repository-search-response.interface';
-import {Organization} from '../../shared/models/organization.interface';
-import {Repository} from '../../shared/models/repository.interface';
-import {OwnerType} from '../../shared/enums/owner-type.enum';
+import { RepositorySearchResponse } from "../../shared/models/repository-search-response.interface";
+import { Organization } from "../../shared/models/organization.interface";
+import { Repository } from "../../shared/models/repository.interface";
+import { OwnerType } from "../../shared/enums/owner-type.enum";
 
-const GITHUB_URL = 'https://api.github.com/search/repositories';
+const GITHUB_URL = "https://api.github.com/search/repositories";
 
 @Component({
-  selector: 'app-github-repositories',
-  templateUrl: './github-repositories.component.html',
-  styleUrls: ['./github-repositories.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  selector: "app-github-repositories",
+  templateUrl: "./github-repositories.component.html",
+  styleUrls: ["./github-repositories.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GithubRepositoriesComponent implements OnInit {
   queries$ = new Subject<string>();
@@ -26,12 +35,16 @@ export class GithubRepositoriesComponent implements OnInit {
   repositories$: Observable<Repository[]>;
   organizations$: Observable<Organization[]>;
 
-  constructor(private http: HttpClient) {
-  }
+  timer$ = timer(1000, 1000).pipe(
+    map((data) => data + 1),
+    tap(console.log)
+  );
+
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.repositories$ = this.queries$.pipe(
-      map((query: string) => query ? query.trim() : ''),
+      map((query: string) => (query ? query.trim() : "")),
       filter(Boolean),
       debounceTime(500),
       distinctUntilChanged(),
@@ -44,7 +57,7 @@ export class GithubRepositoriesComponent implements OnInit {
       map((repository) => repository && repository.owner.organizations_url),
       switchMap((url: string | false) => {
         return url ? this.fetchUserOrganizations(url) : of(undefined);
-      }),
+      })
     );
   }
 
@@ -57,7 +70,7 @@ export class GithubRepositoriesComponent implements OnInit {
   }
 
   exportRepos() {
-    this.repositories$.pipe(take(1)).subscribe(repos => {
+    this.repositories$.pipe(take(1)).subscribe((repos) => {
       console.log(repos);
       // export function here });
     });
@@ -68,9 +81,7 @@ export class GithubRepositoriesComponent implements OnInit {
 
     return this.http
       .get<RepositorySearchResponse>(GITHUB_URL, { params })
-      .pipe(
-        map((response: RepositorySearchResponse) => response.items)
-      );
+      .pipe(map((response: RepositorySearchResponse) => response.items));
   }
 
   private fetchUserOrganizations(url: string): Observable<Organization[]> {
