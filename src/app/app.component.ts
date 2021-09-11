@@ -7,4 +7,6 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'practical-RxJs-Angular';
+
+  timer$ = timer(1000, 1000).pipe(map(data => data + 1), tap(console.log), tap(_ => {}))
 }
